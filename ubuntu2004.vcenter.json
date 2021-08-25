@@ -1,0 +1,100 @@
+{
+  "builders": [
+    {
+      "CPUs": "{{ user `cpus` }}",
+      "RAM": "{{ user `ram` }}",
+      "RAM_hot_plug": true,
+      "RAM_reserve_all": "false",
+
+      "boot_command": [
+        "<enter><enter><f6><esc><wait>",
+        "autoinstall ip=dhcp ds=nocloud;<enter><wait>",
+        "<wait><enter>"
+      ],
+      "boot_wait": "5s",
+      "cd_files": ["./http/meta-data",
+              "./http/user-data"
+      ],
+      "cd_label": "cidata",
+      "convert_to_template": "true",
+      "datastore": "{{ user `vmware_datastore` }}",
+      "disk_controller_type": "lsilogic",
+      "guest_os_type": "ubuntu64Guest",
+      "firmware": "bios",
+      "insecure_connection": "true",
+      "iso_checksum": "{{ user `iso_checksum` }}",
+      "iso_paths": ["{{ user `iso_paths` }}"],
+      "http_directory": "http",
+      "network_adapters": [
+        {
+          "network": "{{ user `vm_network` }}",
+          "network_card": "{{ user `vm_net_card` }}"
+        }
+      ],
+      "notes": "Base Ubuntu 20.04 LTS with CIS hardening, built using packer on {{ isotime \"2006-01-02\" }} at {{isotime \"3:04PM\"}}",
+      "password": "{{ user `vmware_pass` }}",
+      "shutdown_command": "sudo systemctl poweroff",
+      "ssh_handshake_attempts": "100",
+      "ssh_password": "{{ user `ssh_password` }}",
+      "ssh_port": 22,
+      "ssh_timeout": "20m",
+      "ssh_username": "{{ user `ssh_username` }}",
+      "storage": [
+        {
+          "disk_size": "{{ user `vmware_disk_size` }}",
+          "disk_thin_provisioned": "true"
+        }
+      ],
+      "type": "vsphere-iso",
+      "username": "{{ user `vmware_user` }}",
+      "vcenter_server": "{{ user `vmware_server` }}",
+      "host": "{{ user `vmware_host` }}",
+      "datacenter": "{{ user `vmware_datacenter` }}",
+      "vm_name": "{{ user `vm_name` }}"
+    }
+  ],
+  "provisioners": [
+    {
+      "execute_command": "sudo -S bash {{.Path}}",
+      "script": "./provisioners/shell/baseInit.sh",
+      "type": "shell"
+    },
+    {
+      "playbook_dir": "./provisioners/ansible",
+      "playbook_file": "./provisioners/ansible/playbook.yml",
+      "role_paths": [
+        "../ubuntu-cis-hardening"
+      ],
+      "type": "ansible-local"
+    },
+    {
+      "playbook_file": "/etc/ansible/playbook/roster.yml",
+      "type": "ansible"
+    },
+    {
+      "execute_command": "sudo -S bash {{.Path}}",
+      "script": "provisioners/shell/post_cleanup.sh",
+      "type": "shell"
+    }
+  ],
+  "variables": {
+    "cpus": "4",
+    "iso_checksum": "d1f2bf834bbe9bb43faf16f9be992a6f3935e65be0edece1dee2aa6eb1767423",
+    "iso_paths": "[datastore1] ISO/ubuntu-20.04.2-live-server-amd64.iso",
+    "ram": "4096",
+    "ssh_password": "SecretPasswordGoesHere",
+    "ssh_username": "admin",
+    "version": "18",
+    "vm_name": "ubuntu2004template{{ isotime \"2006-01-02\" }}",
+    "vm_net_card": "vmxnet3",
+    "vm_network": "VM Network",
+    "vm_mac_address": "00:50:56:82:5a:6e",
+    "vmware_datastore": "datastore1",
+    "vmware_disk_size": "51200",
+    "vmware_pass": "AnotherSecretPassword",
+    "vmware_server": "virtualcenter",
+    "vmware_datacenter": "datacenter1",
+    "vmware_user": "packer@vsphere.local"
+  }
+}
+

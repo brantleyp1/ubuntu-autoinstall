@@ -1,0 +1,217 @@
+#cloud-config
+autoinstall:
+  update: no
+  identity:
+    hostname: ubuntu2004template
+    password: '$6$SZlyAd1PfUHgGWb2$mo2D/3a9w.pWOa4qgdJk/przldO1nDdJDqvWfKcktf16/eAhBR5vaFfTquvuRuC1L/gSwAHNo5rdyHEaBmLl60'
+    realname: SysAdmin
+    username: sysadmin
+  version: 1
+  ssh:
+    install-server: yes
+  locale: en_US
+  keyboard: 
+    layout: us
+
+  storage:
+    config:
+    - grub_device: true
+      id: disk-sda
+      path: /dev/sda
+      ptable: gpt
+      type: disk
+      wipe: superblock-recursive
+    - device: disk-sda
+      flag: bios_grub
+      id: partition-1
+      number: 1
+      size: 1M
+      type: partition
+    - device: disk-sda
+      wipe: superblock
+      flag: ''
+      number: 2
+      preserve: false
+      grub_device: false
+      type: partition
+      id: partition-2
+      size: 1G
+    - fstype: ext4
+      volume: partition-2
+      preserve: false
+      type: format
+      id: format-11
+    - device: disk-sda
+      size: -1
+      wipe: superblock
+      flag: ''
+      number: 3
+      preserve: false
+      grub_device: false
+      type: partition
+      id: partition-3
+    - name: ubuntu-vg
+      devices: [partition-3]
+      preserve: false
+      type: lvm_volgroup
+      id: lvm_volgroup-3
+    - name: root
+      volgroup: lvm_volgroup-3
+      size: 35%
+      preserve: false
+      type: lvm_partition
+      id: lvm_partition-9
+    - name: swap
+      volgroup: lvm_volgroup-3
+      size: 5%
+      preserve: false
+      type: lvm_partition
+      id: lvm_partition-10
+    - fstype: swap
+      volume: lvm_partition-10
+      preserve: false
+      type: format
+      id: format-13
+    - device: format-13
+      path: ''
+      type: mount
+      id: mount-13
+    - name: tmp
+      volgroup: lvm_volgroup-3
+      size: 10%
+      preserve: false
+      type: lvm_partition
+      id: lvm_partition-11
+    - fstype: ext4
+      volume: lvm_partition-11
+      preserve: false
+      type: format
+      id: format-14
+    - name: var
+      volgroup: lvm_volgroup-3
+      size: 10%
+      preserve: false
+      type: lvm_partition
+      id: lvm_partition-12
+    - fstype: ext4
+      volume: lvm_partition-12
+      preserve: false
+      type: format
+      id: format-15
+    - name: var_tmp
+      volgroup: lvm_volgroup-3
+      size: 5%
+      preserve: false
+      type: lvm_partition
+      id: lvm_partition-13
+    - fstype: ext4
+      volume: lvm_partition-13
+      preserve: false
+      type: format
+      id: format-16
+    - name: log
+      volgroup: lvm_volgroup-3
+      size: 10%
+      preserve: false
+      type: lvm_partition
+      id: lvm_partition-14
+    - fstype: ext4
+      volume: lvm_partition-14
+      preserve: false
+      type: format
+      id: format-17
+    - name: audit
+      volgroup: lvm_volgroup-3
+      size: 10%
+      preserve: false
+      type: lvm_partition
+      id: lvm_partition-15
+    - fstype: ext4
+      volume: lvm_partition-15
+      preserve: false
+      type: format
+      id: format-18
+    - name: home
+      volgroup: lvm_volgroup-3
+      size: 10%
+      preserve: false
+      type: lvm_partition
+      id: lvm_partition-16
+    - fstype: ext4
+      volume: lvm_partition-16
+      preserve: false
+      type: format
+      id: format-19
+    - fstype: ext4
+      volume: lvm_partition-9
+      preserve: false
+      type: format
+      id: format-21
+    - device: format-21
+      path: /
+      type: mount
+      id: mount-21
+    - device: format-11
+      path: /boot
+      type: mount
+      id: mount-11
+    - device: format-14
+      path: /tmp
+      type: mount
+      id: mount-14
+      options: 'nodev,nosuid,noexec'
+    - device: format-15
+      path: /var
+      type: mount
+      id: mount-15
+    - device: format-16
+      path: /var/tmp
+      type: mount
+      id: mount-16
+      options: 'nodev,nosuid,noexec'
+    - device: format-17
+      path: /var/log
+      type: mount
+      id: mount-17
+    - device: format-18
+      path: /var/log/audit
+      type: mount
+      id: mount-18
+    - device: format-19
+      path: /home
+      type: mount
+      id: mount-19
+      options: 'nodev'
+  packages:
+    - open-vm-tools
+    - ansible
+    - wget
+  user-data:
+    timezone: America/Chicago
+    runcmd:
+      - 'sed -i "s/ip=dhcp //g" /target/etc/default/grub' 
+      - 'sed -i "s/ip=dhcp //g" /etc/default/grub' 
+      - 'rm /etc/netplan/50-cloud-init.yaml' 
+    write_files:
+    - encoding: b64
+      content: ICpmaWx0ZXIKIDp1ZnctdXNlci1pbnB1dCAtIFswOjBdCiA6dWZ3LXVzZXItb3V0cHV0IC0gWzA6MF0KIDp1ZnctdXNlci1mb3J3YXJkIC0gWzA6MF0KIDp1ZnctYmVmb3JlLWxvZ2dpbmctaW5wdXQgLSBbMDowXQogOnVmdy1iZWZvcmUtbG9nZ2luZy1vdXRwdXQgLSBbMDowXQogOnVmdy1iZWZvcmUtbG9nZ2luZy1mb3J3YXJkIC0gWzA6MF0KIDp1ZnctdXNlci1sb2dnaW5nLWlucHV0IC0gWzA6MF0KIDp1ZnctdXNlci1sb2dnaW5nLW91dHB1dCAtIFswOjBdCiA6dWZ3LXVzZXItbG9nZ2luZy1mb3J3YXJkIC0gWzA6MF0KIDp1ZnctYWZ0ZXItbG9nZ2luZy1pbnB1dCAtIFswOjBdCiA6dWZ3LWFmdGVyLWxvZ2dpbmctb3V0cHV0IC0gWzA6MF0KIDp1ZnctYWZ0ZXItbG9nZ2luZy1mb3J3YXJkIC0gWzA6MF0KIDp1ZnctbG9nZ2luZy1kZW55IC0gWzA6MF0KIDp1ZnctbG9nZ2luZy1hbGxvdyAtIFswOjBdCiA6dWZ3LXVzZXItbGltaXQgLSBbMDowXQogOnVmdy11c2VyLWxpbWl0LWFjY2VwdCAtIFswOjBdCiAjIyMgUlVMRVMgIyMjCgogIyMjIHR1cGxlICMjIyBhbGxvdyB0Y3AgMjIgMC4wLjAuMC8wIGFueSAwLjAuMC4wLzAgaW4KIC1BIHVmdy11c2VyLWlucHV0IC1wIHRjcCAtLWRwb3J0IDIyIC1qIEFDQ0VQVAoKICMjIyB0dXBsZSAjIyMgYWxsb3cgdGNwIDE5ODEgMC4wLjAuMC8wIGFueSAwLjAuMC4wLzAgaW4KIC1BIHVmdy11c2VyLWlucHV0IC1wIHRjcCAtLWRwb3J0IDE5ODEgLWogQUNDRVBUCgogIyMjIEVORCBSVUxFUyAjIyMKCiAjIyMgTE9HR0lORyAjIyMKIC1BIHVmdy1hZnRlci1sb2dnaW5nLWlucHV0IC1qIExPRyAtLWxvZy1wcmVmaXggIltVRlcgQkxPQ0tdICIgLW0gbGltaXQgLS1saW1pdCAzL21pbiAtLWxpbWl0LWJ1cnN0IDEwCiAtQSB1ZnctYWZ0ZXItbG9nZ2luZy1mb3J3YXJkIC1qIExPRyAtLWxvZy1wcmVmaXggIltVRlcgQkxPQ0tdICIgLW0gbGltaXQgLS1saW1pdCAzL21pbiAtLWxpbWl0LWJ1cnN0IDEwCiAtSSB1ZnctbG9nZ2luZy1kZW55IC1tIGNvbm50cmFjayAtLWN0c3RhdGUgSU5WQUxJRCAtaiBSRVRVUk4gLW0gbGltaXQgLS1saW1pdCAzL21pbiAtLWxpbWl0LWJ1cnN0IDEwCiAtQSB1ZnctbG9nZ2luZy1kZW55IC1qIExPRyAtLWxvZy1wcmVmaXggIltVRlcgQkxPQ0tdICIgLW0gbGltaXQgLS1saW1pdCAzL21pbiAtLWxpbWl0LWJ1cnN0IDEwCiAtQSB1ZnctbG9nZ2luZy1hbGxvdyAtaiBMT0cgLS1sb2ctcHJlZml4ICJbVUZXIEFMTE9XXSAiIC1tIGxpbWl0IC0tbGltaXQgMy9taW4gLS1saW1pdC1idXJzdCAxMAogIyMjIEVORCBMT0dHSU5HICMjIwoKICMjIyBSQVRFIExJTUlUSU5HICMjIwogLUEgdWZ3LXVzZXItbGltaXQgLW0gbGltaXQgLS1saW1pdCAzL21pbnV0ZSAtaiBMT0cgLS1sb2ctcHJlZml4ICJbVUZXIExJTUlUIEJMT0NLXSAiCiAtQSB1ZnctdXNlci1saW1pdCAtaiBSRUpFQ1QKIC1BIHVmdy11c2VyLWxpbWl0LWFjY2VwdCAtaiBBQ0NFUFQKICMjIyBFTkQgUkFURSBMSU1JVElORyAjIyMKIENPTU1JVAo=
+      owner: root:root
+      path: /etc/ufw/user.rules
+      permissions: '0644'
+    - encoding: b64
+      content: IyBLZXJuZWwgc3lzY3RsIGNvbmZpZ3VyYXRpb24gZmlsZSBmb3IgTGludXgKIwojIFZlcnNpb24gMS4xNCAtIDIwMTktMDQtMDUKIyBNaWNoaWVsIEtsYXZlciAtIElUIFByb2Zlc3Npb25hbAojIGh0dHA6Ly9rbGF2ZXIuaXQvbGludXgvIGZvciB0aGUgbGF0ZXN0IHZlcnNpb24gLSBodHRwOi8va2xhdmVyLml0L2JzZC8gZm9yIGEgQlNEIHZhcmlhbnQKIwojIFRoaXMgZmlsZSBzaG91bGQgYmUgc2F2ZWQgYXMgL2V0Yy9zeXNjdGwuY29uZiBhbmQgY2FuIGJlIGFjdGl2YXRlZCB1c2luZyB0aGUgY29tbWFuZDoKIyBzeXNjdGwgLWUgLXAgL2V0Yy9zeXNjdGwuY29uZgojCiMgRm9yIGJpbmFyeSB2YWx1ZXMsIDAgaXMgZGlzYWJsZWQsIDEgaXMgZW5hYmxlZC4gIFNlZSBzeXNjdGwoOCkgYW5kIHN5c2N0bC5jb25mKDUpIGZvciBtb3JlIGRldGFpbHMuCiMKIyBUZXN0ZWQgd2l0aDogVWJ1bnR1IDE0LjA0IExUUyBrZXJuZWwgdmVyc2lvbiAzLjEzCiMgICAgICAgICAgICAgIERlYmlhbiA3IGtlcm5lbCB2ZXJzaW9uIDMuMgojICAgICAgICAgICAgICBDZW50T1MgNyBrZXJuZWwgdmVyc2lvbiAzLjEwCgojCiMgSW50ZW5kZWQgdXNlIGZvciBkZWRpY2F0ZWQgc2VydmVyIHN5c3RlbXMgYXQgaGlnaC1zcGVlZCBuZXR3b3JrcyB3aXRoIGxvYWRzIG9mIFJBTSBhbmQgYmFuZHdpZHRoIGF2YWlsYWJsZQojIE9wdGltaXNlZCBhbmQgdHVuZWQgZm9yIGhpZ2gtcGVyZm9ybWFuY2Ugd2ViL2Z0cC9tYWlsL2RucyBzZXJ2ZXJzIHdpdGggaGlnaCBjb25uZWN0aW9uLXJhdGVzCiMgRE8gTk9UIFVTRSBhdCBidXN5IG5ldHdvcmtzIG9yIHhEU0wvQ2FibGUgY29ubmVjdGlvbnMgd2hlcmUgcGFja2V0bG9zcyBjYW4gYmUgZXhwZWN0ZWQKIyAtLS0tLS0tLS0tCgojIENyZWRpdHM6CiMgaHR0cDovL3d3dy5lbmlnbWEuaWQuYXUvbGludXhfdHVuaW5nLnR4dAojIGh0dHA6Ly93d3cuc2VjdXJpdHlmb2N1cy5jb20vaW5mb2N1cy8xNzI5CiMgaHR0cDovL2Zhc3RlcmRhdGEuZXMubmV0L1RDUC10dW5pbmcvbGludXguaHRtbAojIGh0dHA6Ly9mZWRvcmFob3N0ZWQub3JnL2t0dW5lL2Jyb3dzZXIvc3lzY3RsLmt0dW5lCiMgaHR0cDovL3d3dy5jeW1ydS5jb20vRG9jdW1lbnRzL2lwLXN0YWNrLXR1bmluZy5odG1sCiMgaHR0cDovL3d3dy5rZXJuZWwub3JnL2RvYy9Eb2N1bWVudGF0aW9uL25ldHdvcmtpbmcvaXAtc3lzY3RsLnR4dAojIGh0dHA6Ly93d3cuZnJvemVudHV4Lm5ldC9pcHN5c2N0bC10dXRvcmlhbC9jaHVua3lodG1sL2luZGV4Lmh0bWwKIyBodHRwOi8va25vbC5nb29nbGUuY29tL2svbGludXgtcGVyZm9ybWFuY2UtdHVuaW5nLWFuZC1tZWFzdXJlbWVudAojIGh0dHA6Ly93d3cuY3liZXJjaXRpLmJpei9mYXEvbGludXgta2VybmVsLXR1bmluZy12aXJ0dWFsLW1lbW9yeS1zdWJzeXN0ZW0vCiMgaHR0cDovL3d3dy5yZWRib29rcy5pYm0uY29tL2Fic3RyYWN0cy9SRURQNDI4NS5odG1sCiMgaHR0cDovL3d3dy5zcGVlZGd1aWRlLm5ldC9yZWFkX2FydGljbGVzLnBocD9pZD0xMjEKIyBodHRwOi8vbGFydGMub3JnL2hvd3RvL2xhcnRjLmtlcm5lbC5vYnNjdXJlLmh0bWwKIyBodHRwOi8vZW4ud2lraXBlZGlhLm9yZy93aWtpL1N5c2N0bAojIGh0dHBzOi8vYmxvZy5jbG91ZGZsYXJlLmNvbS9odHRwLTItcHJpb3JpdGl6YXRpb24td2l0aC1uZ2lueC8KCgoKIyMjCiMjIyBHRU5FUkFMIFNZU1RFTSBTRUNVUklUWSBPUFRJT05TICMjIwojIyMKCiMgQ29udHJvbHMgdGhlIFN5c3RlbSBSZXF1ZXN0IGRlYnVnZ2luZyBmdW5jdGlvbmFsaXR5IG9mIHRoZSBrZXJuZWwKa2VybmVsLnN5c3JxID0gMAoKIyBDb250cm9scyB3aGV0aGVyIGNvcmUgZHVtcHMgd2lsbCBhcHBlbmQgdGhlIFBJRCB0byB0aGUgY29yZSBmaWxlbmFtZS4KIyBVc2VmdWwgZm9yIGRlYnVnZ2luZyBtdWx0aS10aHJlYWRlZCBhcHBsaWNhdGlvbnMuCmtlcm5lbC5jb3JlX3VzZXNfcGlkID0gMQoKI0FsbG93IGZvciBtb3JlIFBJRHMKa2VybmVsLnBpZF9tYXggPSA2NTUzNQoKIyBUaGUgY29udGVudHMgb2YgL3Byb2MvPHBpZD4vbWFwcyBhbmQgc21hcHMgZmlsZXMgYXJlIG9ubHkgdmlzaWJsZSB0bwojIHJlYWRlcnMgdGhhdCBhcmUgYWxsb3dlZCB0byBwdHJhY2UoKSB0aGUgcHJvY2VzcwprZXJuZWwubWFwc19wcm90ZWN0ID0gMQoKI0VuYWJsZSBFeGVjU2hpZWxkIHByb3RlY3Rpb24Ka2VybmVsLmV4ZWMtc2hpZWxkID0gMQprZXJuZWwucmFuZG9taXplX3ZhX3NwYWNlID0gMgoKIyBDb250cm9scyB0aGUgbWF4aW11bSBzaXplIG9mIGEgbWVzc2FnZSwgaW4gYnl0ZXMKa2VybmVsLm1zZ21uYiA9IDY1NTM1CgojIENvbnRyb2xzIHRoZSBkZWZhdWx0IG1heG1pbXVtIHNpemUgb2YgYSBtZXNhZ2UgcXVldWUKa2VybmVsLm1zZ21heCA9IDY1NTM1CgojIFJlc3RyaWN0IGNvcmUgZHVtcHMKZnMuc3VpZF9kdW1wYWJsZSA9IDAKCiMgSGlkZSBleHBvc2VkIGtlcm5lbCBwb2ludGVycwprZXJuZWwua3B0cl9yZXN0cmljdCA9IDEKCgoKIyMjCiMjIyBJTVBST1ZFIFNZU1RFTSBNRU1PUlkgTUFOQUdFTUVOVCAjIyMKIyMjCgojIEluY3JlYXNlIHNpemUgb2YgZmlsZSBoYW5kbGVzIGFuZCBpbm9kZSBjYWNoZQpmcy5maWxlLW1heCA9IDIwOTcwOAoKIyBEbyBsZXNzIHN3YXBwaW5nCnZtLnN3YXBwaW5lc3MgPSAzMAp2bS5kaXJ0eV9yYXRpbyA9IDMwCnZtLmRpcnR5X2JhY2tncm91bmRfcmF0aW8gPSA1CgojIHNwZWNpZmllcyB0aGUgbWluaW11bSB2aXJ0dWFsIGFkZHJlc3MgdGhhdCBhIHByb2Nlc3MgaXMgYWxsb3dlZCB0byBtbWFwCnZtLm1tYXBfbWluX2FkZHIgPSA0MDk2CgojIDUwJSBvdmVyY29tbWl0bWVudCBvZiBhdmFpbGFibGUgbWVtb3J5CnZtLm92ZXJjb21taXRfcmF0aW8gPSA1MAp2bS5vdmVyY29tbWl0X21lbW9yeSA9IDAKCiMgU2V0IG1heGltdW0gYW1vdW50IG9mIG1lbW9yeSBhbGxvY2F0ZWQgdG8gc2htIHRvIDI1Nk1CCmtlcm5lbC5zaG1tYXggPSAyNjg0MzU0NTYKa2VybmVsLnNobWFsbCA9IDI2ODQzNTQ1NgoKIyBLZWVwIGF0IGxlYXN0IDY0TUIgb2YgZnJlZSBSQU0gc3BhY2UgYXZhaWxhYmxlCnZtLm1pbl9mcmVlX2tieXRlcyA9IDY1NTM1CgoKCiMjIwojIyMgR0VORVJBTCBORVRXT1JLIFNFQ1VSSVRZIE9QVElPTlMgIyMjCiMjIwoKI1ByZXZlbnQgU1lOIGF0dGFjaywgZW5hYmxlIFNZTmNvb2tpZXMgKHRoZXkgd2lsbCBraWNrLWluIHdoZW4gdGhlIG1heF9zeW5fYmFja2xvZyByZWFjaGVkKQpuZXQuaXB2NC50Y3Bfc3luY29va2llcyA9IDEKbmV0LmlwdjQudGNwX3N5bl9yZXRyaWVzID0gMgpuZXQuaXB2NC50Y3Bfc3luYWNrX3JldHJpZXMgPSAyCm5ldC5pcHY0LnRjcF9tYXhfc3luX2JhY2tsb2cgPSA0MDk2CgojIERpc2FibGVzIHBhY2tldCBmb3J3YXJkaW5nCm5ldC5pcHY0LmlwX2ZvcndhcmQgPSAwCm5ldC5pcHY0LmNvbmYuYWxsLmZvcndhcmRpbmcgPSAwCm5ldC5pcHY0LmNvbmYuZGVmYXVsdC5mb3J3YXJkaW5nID0gMApuZXQuaXB2Ni5jb25mLmFsbC5mb3J3YXJkaW5nID0gMApuZXQuaXB2Ni5jb25mLmRlZmF1bHQuZm9yd2FyZGluZyA9IDAKCiMgRGlzYWJsZXMgSVAgc291cmNlIHJvdXRpbmcKbmV0LmlwdjQuY29uZi5hbGwuc2VuZF9yZWRpcmVjdHMgPSAwCm5ldC5pcHY0LmNvbmYuZGVmYXVsdC5zZW5kX3JlZGlyZWN0cyA9IDAKbmV0LmlwdjQuY29uZi5hbGwuYWNjZXB0X3NvdXJjZV9yb3V0ZSA9IDAKbmV0LmlwdjQuY29uZi5kZWZhdWx0LmFjY2VwdF9zb3VyY2Vfcm91dGUgPSAwCm5ldC5pcHY2LmNvbmYuYWxsLmFjY2VwdF9zb3VyY2Vfcm91dGUgPSAwCm5ldC5pcHY2LmNvbmYuZGVmYXVsdC5hY2NlcHRfc291cmNlX3JvdXRlID0gMAoKIyBFbmFibGUgSVAgc3Bvb2ZpbmcgcHJvdGVjdGlvbiwgdHVybiBvbiBzb3VyY2Ugcm91dGUgdmVyaWZpY2F0aW9uCm5ldC5pcHY0LmNvbmYuYWxsLnJwX2ZpbHRlciA9IDEKbmV0LmlwdjQuY29uZi5kZWZhdWx0LnJwX2ZpbHRlciA9IDEKCiMgRGlzYWJsZSBJQ01QIFJlZGlyZWN0IEFjY2VwdGFuY2UKbmV0LmlwdjQuY29uZi5hbGwuYWNjZXB0X3JlZGlyZWN0cyA9IDAKbmV0LmlwdjQuY29uZi5kZWZhdWx0LmFjY2VwdF9yZWRpcmVjdHMgPSAwCm5ldC5pcHY0LmNvbmYuYWxsLnNlY3VyZV9yZWRpcmVjdHMgPSAwCm5ldC5pcHY0LmNvbmYuZGVmYXVsdC5zZWN1cmVfcmVkaXJlY3RzID0gMApuZXQuaXB2Ni5jb25mLmFsbC5hY2NlcHRfcmVkaXJlY3RzID0gMApuZXQuaXB2Ni5jb25mLmRlZmF1bHQuYWNjZXB0X3JlZGlyZWN0cyA9IDAKCiMgRW5hYmxlIExvZyBTcG9vZmVkIFBhY2tldHMsIFNvdXJjZSBSb3V0ZWQgUGFja2V0cywgUmVkaXJlY3QgUGFja2V0cwpuZXQuaXB2NC5jb25mLmFsbC5sb2dfbWFydGlhbnMgPSAxCm5ldC5pcHY0LmNvbmYuZGVmYXVsdC5sb2dfbWFydGlhbnMgPSAxCgojIERlY3JlYXNlIHRoZSB0aW1lIGRlZmF1bHQgdmFsdWUgZm9yIHRjcF9maW5fdGltZW91dCBjb25uZWN0aW9uCm5ldC5pcHY0LnRjcF9maW5fdGltZW91dCA9IDcKCiMgRGVjcmVhc2UgdGhlIHRpbWUgZGVmYXVsdCB2YWx1ZSBmb3IgY29ubmVjdGlvbnMgdG8ga2VlcCBhbGl2ZQpuZXQuaXB2NC50Y3Bfa2VlcGFsaXZlX3RpbWUgPSAzMDAKbmV0LmlwdjQudGNwX2tlZXBhbGl2ZV9wcm9iZXMgPSA1Cm5ldC5pcHY0LnRjcF9rZWVwYWxpdmVfaW50dmwgPSAxNQoKIyBEb24ndCByZWxheSBib290cApuZXQuaXB2NC5jb25mLmFsbC5ib290cF9yZWxheSA9IDAKCiMgRG9uJ3QgcHJveHkgYXJwIGZvciBhbnlvbmUKbmV0LmlwdjQuY29uZi5hbGwucHJveHlfYXJwID0gMAoKIyBUdXJuIG9uIHRoZSB0Y3BfdGltZXN0YW1wcywgYWNjdXJhdGUgdGltZXN0YW1wIG1ha2UgVENQIGNvbmdlc3Rpb24gY29udHJvbCBhbGdvcml0aG1zIHdvcmsgYmV0dGVyCm5ldC5pcHY0LnRjcF90aW1lc3RhbXBzID0gMQoKIyBEb24ndCBpZ25vcmUgZGlyZWN0ZWQgcGluZ3MKbmV0LmlwdjQuaWNtcF9lY2hvX2lnbm9yZV9hbGwgPSAwCgojIEVuYWJsZSBpZ25vcmluZyBicm9hZGNhc3RzIHJlcXVlc3QKbmV0LmlwdjQuaWNtcF9lY2hvX2lnbm9yZV9icm9hZGNhc3RzID0gMQoKIyBFbmFibGUgYmFkIGVycm9yIG1lc3NhZ2UgUHJvdGVjdGlvbgpuZXQuaXB2NC5pY21wX2lnbm9yZV9ib2d1c19lcnJvcl9yZXNwb25zZXMgPSAxCgojIEFsbG93ZWQgbG9jYWwgcG9ydCByYW5nZQpuZXQuaXB2NC5pcF9sb2NhbF9wb3J0X3JhbmdlID0gMTYzODQgNjU1MzUKCiMgRW5hYmxlIGEgZml4IGZvciBSRkMxMzM3IC0gdGltZS13YWl0IGFzc2Fzc2luYXRpb24gaGF6YXJkcyBpbiBUQ1AKbmV0LmlwdjQudGNwX3JmYzEzMzcgPSAxCgojIERvIG5vdCBhdXRvLWNvbmZpZ3VyZSBJUHY2Cm5ldC5pcHY2LmNvbmYuYWxsLmF1dG9jb25mPTAKbmV0LmlwdjYuY29uZi5hbGwuYWNjZXB0X3JhPTAKbmV0LmlwdjYuY29uZi5kZWZhdWx0LmF1dG9jb25mPTAKbmV0LmlwdjYuY29uZi5kZWZhdWx0LmFjY2VwdF9yYT0wCm5ldC5pcHY2LmNvbmYuZXRoMC5hdXRvY29uZj0wCm5ldC5pcHY2LmNvbmYuZXRoMC5hY2NlcHRfcmE9MAoKCgojIyMKIyMjIFRVTklORyBORVRXT1JLIFBFUkZPUk1BTkNFICMjIwojIyMKCiMgVXNlIEJCUiBUQ1AgY29uZ2VzdGlvbiBjb250cm9sIGFuZCBzZXQgdGNwX25vdHNlbnRfbG93YXQgdG8gMTYzODQgdG8gZW5zdXJlIEhUVFAvMiBwcmlvcml0aXphdGlvbiB3b3JrcyBvcHRpbWFsbHkKIyBEbyBhICdtb2Rwcm9iZSB0Y3BfYmJyJyBmaXJzdCAoa2VybmVsID4gNC45KQojIEZhbGwtYmFjayB0byBodGNwIGlmIGJiciBpcyB1bmF2YWlsYWJsZSAob2xkZXIga2VybmVscykKbmV0LmlwdjQudGNwX2Nvbmdlc3Rpb25fY29udHJvbCA9IGh0Y3AKbmV0LmlwdjQudGNwX2Nvbmdlc3Rpb25fY29udHJvbCA9IGJicgpuZXQuaXB2NC50Y3Bfbm90c2VudF9sb3dhdCA9IDE2Mzg0CiAgICAKIyBGb3Igc2VydmVycyB3aXRoIHRjcC1oZWF2eSB3b3JrbG9hZHMsIGVuYWJsZSAnZnEnIHF1ZXVlIG1hbmFnZW1lbnQgc2NoZWR1bGVyIChrZXJuZWwgPiAzLjEyKQpuZXQuY29yZS5kZWZhdWx0X3FkaXNjID0gZnEKCiMgVHVybiBvbiB0aGUgdGNwX3dpbmRvd19zY2FsaW5nCm5ldC5pcHY0LnRjcF93aW5kb3dfc2NhbGluZyA9IDEKCiMgSW5jcmVhc2UgdGhlIHJlYWQtYnVmZmVyIHNwYWNlIGFsbG9jYXRhYmxlCm5ldC5pcHY0LnRjcF9ybWVtID0gODE5MiA4NzM4MCAxNjc3NzIxNgpuZXQuaXB2NC51ZHBfcm1lbV9taW4gPSAxNjM4NApuZXQuY29yZS5ybWVtX2RlZmF1bHQgPSAyNjIxNDQKbmV0LmNvcmUucm1lbV9tYXggPSAxNjc3NzIxNgoKIyBJbmNyZWFzZSB0aGUgd3JpdGUtYnVmZmVyLXNwYWNlIGFsbG9jYXRhYmxlCm5ldC5pcHY0LnRjcF93bWVtID0gODE5MiA2NTUzNiAxNjc3NzIxNgpuZXQuaXB2NC51ZHBfd21lbV9taW4gPSAxNjM4NApuZXQuY29yZS53bWVtX2RlZmF1bHQgPSAyNjIxNDQKbmV0LmNvcmUud21lbV9tYXggPSAxNjc3NzIxNgoKIyBJbmNyZWFzZSBudW1iZXIgb2YgaW5jb21pbmcgY29ubmVjdGlvbnMKbmV0LmNvcmUuc29tYXhjb25uID0gMzI3NjgKCiMgSW5jcmVhc2UgbnVtYmVyIG9mIGluY29taW5nIGNvbm5lY3Rpb25zIGJhY2tsb2cKbmV0LmNvcmUubmV0ZGV2X21heF9iYWNrbG9nID0gMTYzODQKbmV0LmNvcmUuZGV2X3dlaWdodCA9IDY0CgojIEluY3JlYXNlIHRoZSBtYXhpbXVtIGFtb3VudCBvZiBvcHRpb24gbWVtb3J5IGJ1ZmZlcnMKbmV0LmNvcmUub3B0bWVtX21heCA9IDY1NTM1CgojIEluY3JlYXNlIHRoZSB0Y3AtdGltZS13YWl0IGJ1Y2tldHMgcG9vbCBzaXplIHRvIHByZXZlbnQgc2ltcGxlIERPUyBhdHRhY2tzCm5ldC5pcHY0LnRjcF9tYXhfdHdfYnVja2V0cyA9IDE0NDAwMDAKCiMgdHJ5IHRvIHJldXNlIHRpbWUtd2FpdCBjb25uZWN0aW9ucywgYnV0IGRvbid0IHJlY3ljbGUgdGhlbSAocmVjeWNsZSBjYW4gYnJlYWsgY2xpZW50cyBiZWhpbmQgTkFUKQpuZXQuaXB2NC50Y3BfdHdfcmVjeWNsZSA9IDAKbmV0LmlwdjQudGNwX3R3X3JldXNlID0gMQoKIyBMaW1pdCBudW1iZXIgb2Ygb3JwaGFucywgZWFjaCBvcnBoYW4gY2FuIGVhdCB1cCB0byAxNk0gKG1heCB3bWVtKSBvZiB1bnN3YXBwYWJsZSBtZW1vcnkKbmV0LmlwdjQudGNwX21heF9vcnBoYW5zID0gMTYzODQKbmV0LmlwdjQudGNwX29ycGhhbl9yZXRyaWVzID0gMAoKIyBMaW1pdCB0aGUgbWF4aW11bSBtZW1vcnkgdXNlZCB0byByZWFzc2VtYmxlIElQIGZyYWdtZW50cyAoQ1ZFLTIwMTgtNTM5MSkKbmV0LmlwdjQuaXBmcmFnX2xvd190aHJlc2ggPSAxOTY2MDgKbmV0LmlwdjYuaXA2ZnJhZ19sb3dfdGhyZXNoID0gMTk2NjA4Cm5ldC5pcHY0LmlwZnJhZ19oaWdoX3RocmVzaCA9IDI2MjE0NApuZXQuaXB2Ni5pcDZmcmFnX2hpZ2hfdGhyZXNoID0gMjYyMTQ0CgoKIyBkb24ndCBjYWNoZSBzc3RocmVzaCBmcm9tIHByZXZpb3VzIGNvbm5lY3Rpb24KbmV0LmlwdjQudGNwX25vX21ldHJpY3Nfc2F2ZSA9IDEKbmV0LmlwdjQudGNwX21vZGVyYXRlX3JjdmJ1ZiA9IDEKCiMgSW5jcmVhc2Ugc2l6ZSBvZiBSUEMgZGF0YWdyYW0gcXVldWUgbGVuZ3RoCm5ldC51bml4Lm1heF9kZ3JhbV9xbGVuID0gNTAKCiMgRG9uJ3QgYWxsb3cgdGhlIGFycCB0YWJsZSB0byBiZWNvbWUgYmlnZ2VyIHRoYW4gdGhpcwpuZXQuaXB2NC5uZWlnaC5kZWZhdWx0LmdjX3RocmVzaDMgPSAyMDQ4CgojIFRlbGwgdGhlIGdjIHdoZW4gdG8gYmVjb21lIGFnZ3Jlc3NpdmUgd2l0aCBhcnAgdGFibGUgY2xlYW5pbmcuCiMgQWRqdXN0IHRoaXMgYmFzZWQgb24gc2l6ZSBvZiB0aGUgTEFOLiAxMDI0IGlzIHN1aXRhYmxlIGZvciBtb3N0IC8yNCBuZXR3b3JrcwpuZXQuaXB2NC5uZWlnaC5kZWZhdWx0LmdjX3RocmVzaDIgPSAxMDI0CgojIEFkanVzdCB3aGVyZSB0aGUgZ2Mgd2lsbCBsZWF2ZSBhcnAgdGFibGUgYWxvbmUgLSBzZXQgdG8gMzIuCm5ldC5pcHY0Lm5laWdoLmRlZmF1bHQuZ2NfdGhyZXNoMSA9IDMyCgojIEFkanVzdCB0byBhcnAgdGFibGUgZ2MgdG8gY2xlYW4tdXAgbW9yZSBvZnRlbgpuZXQuaXB2NC5uZWlnaC5kZWZhdWx0LmdjX2ludGVydmFsID0gMzAKCiMgSW5jcmVhc2UgVENQIHF1ZXVlIGxlbmd0aApuZXQuaXB2NC5uZWlnaC5kZWZhdWx0LnByb3h5X3FsZW4gPSA5NgpuZXQuaXB2NC5uZWlnaC5kZWZhdWx0LnVucmVzX3FsZW4gPSA2CgojIEVuYWJsZSBFeHBsaWNpdCBDb25nZXN0aW9uIE5vdGlmaWNhdGlvbiAoUkZDIDMxNjgpLCBkaXNhYmxlIGl0IGlmIGl0IGRvZXNuJ3Qgd29yayBmb3IgeW91Cm5ldC5pcHY0LnRjcF9lY24gPSAxCm5ldC5pcHY0LnRjcF9yZW9yZGVyaW5nID0gMwoKIyBIb3cgbWFueSB0aW1lcyB0byByZXRyeSBraWxsaW5nIGFuIGFsaXZlIFRDUCBjb25uZWN0aW9uCm5ldC5pcHY0LnRjcF9yZXRyaWVzMiA9IDE1Cm5ldC5pcHY0LnRjcF9yZXRyaWVzMSA9IDMKCiMgQXZvaWQgZmFsbGluZyBiYWNrIHRvIHNsb3cgc3RhcnQgYWZ0ZXIgYSBjb25uZWN0aW9uIGdvZXMgaWRsZQojIGtlZXBzIG91ciBjd25kIGxhcmdlIHdpdGggdGhlIGtlZXAgYWxpdmUgY29ubmVjdGlvbnMgKGtlcm5lbCA+IDMuNikKbmV0LmlwdjQudGNwX3Nsb3dfc3RhcnRfYWZ0ZXJfaWRsZSA9IDAKCiMgQWxsb3cgdGhlIFRDUCBmYXN0b3BlbiBmbGFnIHRvIGJlIHVzZWQsIGJld2FyZSBzb21lIGZpcmV3YWxscyBkbyBub3QgbGlrZSBURk8hIChrZXJuZWwgPiAzLjcpCm5ldC5pcHY0LnRjcF9mYXN0b3BlbiA9IDMKCiMgVGhpcyB3aWxsIGVudXNyZSB0aGF0IGltbWVkaWF0bHkgc3Vic2VxdWVudCBjb25uZWN0aW9ucyB1c2UgdGhlIG5ldyB2YWx1ZXMKbmV0LmlwdjQucm91dGUuZmx1c2ggPSAxCm5ldC5pcHY2LnJvdXRlLmZsdXNoID0gMQoKCgojIyMKIyMjIENvbW1lbnRzL3N1Z2dlc3Rpb25zL2FkZGl0aW9ucyBhcmUgd2VsY29tZSEKIyMjCg==
+      owner: root:root
+      path: /etc/sysctl.conf
+      permissions: '0644'
+  late-commands:
+    - "echo 'Defaults:sysadmin !requiretty' > /target/etc/sudoers.d/sysadmin"
+    - "echo 'sysadmin ALL=(ALL) NOPASSWD: ALL' >> /target/etc/sudoers.d/sysadmin"
+    - "chmod 440 /target/etc/sudoers.d/sysadmin"
+    - "sed -i -e 's/^# HOME=\\/home/HOME=\\/export\\/home/g' /target/etc/default/useradd"
+    - "sed -i -e 's/^DHOME=\\/home/DHOME=\\/export\\/home/g' /target/etc/adduser.conf"
+    - "mkdir -p /target/export/home"
+    - "echo 'sysadmin ALL=(ALL) NOPASSWD: ALL' >> /target/etc/sudoers.d/sysadmin"
+    - 'sed -i "s/^#Port 22/Port 22/g" /target/etc/ssh/sshd_config'
+    - 'sed -i "/^Port 22/a Port 1981" /target/etc/ssh/sshd_config'
+#    - 'sed -i "s/dhcp4: true/&\n      dhcp-identifier: mac/" /target/etc/netplan/00-installer-config.yaml'
+#    - "useradd -m -d /target/export/home/sysadmin -p '$6$SZlyAd1PfUHgGWb2$mo2D/3a9w.pWOa4qgdJk/przldO1nDdJDqvWfKcktf16/eAhBR5vaFfTquvuRuC1L/gSwAHNo5rdyHEaBmLl60' -s /bin/bash -c 'WhiteSky admin' sysadmin"
